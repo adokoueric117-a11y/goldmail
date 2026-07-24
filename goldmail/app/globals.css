@@ -1,0 +1,198 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   DaisyUI 5 plugin — thèmes gold-dark et gold-light custom
+   ═══════════════════════════════════════════════════════════════ */
+@plugin "daisyui" {
+  themes: gold-dark --default, gold-light, gold;
+}
+
+/* ─── Thème "gold-dark" ─────────────────────────────────────────────────── */
+[data-theme="gold-dark"],
+[data-theme="gold"] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --color-base-100: oklch(14% 0.012 285);   /* #0e0e14 — fond principal    */
+  --color-base-200: oklch(17% 0.012 285);   /* #111118 — fond secondaire   */
+  --color-base-300: oklch(21% 0.012 285);   /* #161620 — fond tertiaire    */
+  --color-base-content: oklch(92% 0.008 285); /* texte principal            */
+
+  /* Primaire — or champagne */
+  --color-primary: oklch(72% 0.15 85);      /* ≈ #C9A227 — or vif          */
+  --color-primary-content: oklch(12% 0.02 85);
+
+  /* Secondaire */
+  --color-secondary: oklch(65% 0.12 80);    /* or atténué                  */
+  --color-secondary-content: oklch(12% 0.02 80);
+
+  /* Accent */
+  --color-accent: oklch(74% 0.14 83);       /* ≈ #D4AF37 — or brillant     */
+  --color-accent-content: oklch(12% 0.02 83);
+
+  /* Neutre */
+  --color-neutral: oklch(25% 0.015 285);
+  --color-neutral-content: oklch(88% 0.008 285);
+
+  /* Sémantiques */
+  --color-info: oklch(70% 0.14 240);
+  --color-info-content: oklch(98% 0.01 240);
+  --color-success: oklch(67% 0.17 145);
+  --color-success-content: oklch(98% 0.01 145);
+  --color-warning: oklch(75% 0.16 70);
+  --color-warning-content: oklch(15% 0.02 70);
+  --color-error: oklch(65% 0.25 25);
+  --color-error-content: oklch(98% 0.02 25);
+
+  --card-bg: oklch(17% 0.012 285);
+  --card-border: oklch(25% 0.015 285);
+
+  /* Rayons */
+  --radius-btn: 0.5rem;
+  --radius-box: 0.75rem;
+}
+
+/* ─── Thème "gold-light" ────────────────────────────────────────────────── */
+[data-theme="gold-light"] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --color-base-100: oklch(98% 0.005 85);   /* fond principal très clair  */
+  --color-base-200: oklch(94% 0.008 85);   /* fond secondaire             */
+  --color-base-300: oklch(88% 0.012 85);   /* fond tertiaire / bordures   */
+  --color-base-content: oklch(20% 0.02 285); /* texte principal sombre      */
+
+  /* Primaire — or foncé pour contraste sur fond clair */
+  --color-primary: oklch(62% 0.16 85);      /* #b38b19                     */
+  --color-primary-content: oklch(99% 0 0);
+
+  /* Secondaire */
+  --color-secondary: oklch(55% 0.13 80);
+  --color-secondary-content: oklch(99% 0 0);
+
+  /* Accent */
+  --color-accent: oklch(65% 0.15 83);
+  --color-accent-content: oklch(99% 0 0);
+
+  /* Neutre */
+  --color-neutral: oklch(90% 0.01 85);
+  --color-neutral-content: oklch(20% 0.02 285);
+
+  /* Sémantiques */
+  --color-info: oklch(55% 0.18 240);
+  --color-info-content: oklch(98% 0.01 240);
+  --color-success: oklch(52% 0.18 145);
+  --color-success-content: oklch(98% 0.01 145);
+  --color-warning: oklch(65% 0.18 70);
+  --color-warning-content: oklch(15% 0.02 70);
+  --color-error: oklch(55% 0.22 25);
+  --color-error-content: oklch(98% 0.02 25);
+
+  --card-bg: oklch(100% 0 0);
+  --card-border: oklch(88% 0.012 85);
+
+  /* Rayons */
+  --radius-btn: 0.5rem;
+  --radius-box: 0.75rem;
+}
+
+/* ─── Variables CSS globales ────────────────────────────────────────────── */
+:root {
+  --gold: oklch(72% 0.15 85);
+  --gold-dim: oklch(65% 0.12 82);
+  --gold-bright: oklch(78% 0.16 86);
+  --gold-glow: oklch(72% 0.15 85 / 0.25);
+  --anthracite: oklch(14% 0.012 285);
+  --anthracite-2: oklch(17% 0.012 285);
+  --anthracite-3: oklch(21% 0.012 285);
+}
+
+/* ─── Typographie ───────────────────────────────────────────────────────── */
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ─── Utilitaires gold personnalisés ────────────────────────────────────── */
+.text-gold {
+  color: var(--gold);
+}
+.border-gold {
+  border-color: var(--gold);
+}
+.bg-gold {
+  background-color: var(--gold);
+}
+.glow-gold {
+  box-shadow: 0 0 20px var(--gold-glow), 0 0 60px oklch(72% 0.15 85 / 0.1);
+}
+.ring-gold {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Ligne dorée de séparation */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold) 50%,
+    transparent 100%
+  );
+}
+
+/* Gradient or → transparent pour les héros */
+.gradient-gold-overlay {
+  background: radial-gradient(
+    ellipse 60% 40% at 50% 0%,
+    oklch(72% 0.15 85 / 0.12) 0%,
+    transparent 70%
+  );
+}
+
+/* Carte avec bordure dorée au survol */
+.card-gold {
+  background: var(--card-bg, oklch(17% 0.012 285));
+  border: 1px solid var(--card-border, oklch(25% 0.015 285));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.card-gold:hover {
+  border-color: oklch(72% 0.15 85 / 0.5);
+  box-shadow: 0 4px 24px oklch(72% 0.15 85 / 0.1);
+}
+
+/* Badge or */
+.badge-gold {
+  background: oklch(72% 0.15 85 / 0.15);
+  color: var(--gold);
+  border: 1px solid oklch(72% 0.15 85 / 0.3);
+}
+
+/* Scrollbar custom */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-base-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-base-300);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(72% 0.15 85 / 0.5);
+}
+
+/* Focus visible gold */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Sélection de texte */
+::selection {
+  background: oklch(72% 0.15 85 / 0.25);
+  color: var(--color-base-content);
+}
