@@ -13,7 +13,13 @@ export interface SmtpServerConfig {
 
 const CONFIG_FILE = path.join(process.cwd(), "smtp-config.json");
 
+let inMemoryConfig: SmtpServerConfig | null = null;
+
 export function getSmtpConfig(): SmtpServerConfig {
+  if (inMemoryConfig) {
+    return inMemoryConfig;
+  }
+
   // 1. Env vars priority
   if (process.env.SMTP_HOST) {
     return {
@@ -55,7 +61,23 @@ export function getSmtpConfig(): SmtpServerConfig {
 }
 
 export function saveSmtpConfig(config: Partial<SmtpServerConfig>): void {
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
+  const current = getSmtpConfig();
+  const updated: SmtpServerConfig = {
+    host: config.host ?? current.host,
+    port: config.port ?? current.port,
+    user: config.user ?? current.user,
+    pass: config.pass ?? current.pass,
+    from: config.from ?? current.from,
+    secure: config.secure ?? current.secure,
+  };
+
+  inMemoryConfig = updated;
+
+  try {
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("[smtp-server] Could not write smtp-config.json (serverless read-only filesystem fallback active):", e);
+  }
 }
 
 export function createSmtpTransporter(config?: SmtpServerConfig) {

@@ -22,6 +22,15 @@ interface Step5PreviewProps {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 /** Assemble le HTML complet de l'email (message + signature inline) */
 function buildEmailHtml(
   subject: string,
@@ -29,6 +38,7 @@ function buildEmailHtml(
   signature: Signature | null,
   profile: Profile | null
 ): string {
+  const safeSubject = escapeHtml(subject);
   const sigHtml =
     signature && profile
       ? generateSignatureHtml(
@@ -49,7 +59,7 @@ function buildEmailHtml(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${subject}</title>
+  <title>${safeSubject}</title>
 </head>
 <body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;">

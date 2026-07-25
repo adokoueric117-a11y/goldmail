@@ -2,6 +2,29 @@
  * SignaturePreview — rendu HTML de la signature selon le template choisi.
  * Ce composant produit le HTML qui sera intégré dans l'email final.
  */
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function sanitizeImageSrc(src?: string | null): string | null {
+  if (!src) return null;
+  const trimmed = src.trim();
+  if (
+    trimmed.startsWith("data:image/") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://")
+  ) {
+    return trimmed;
+  }
+  return null;
+}
+
 interface SignaturePreviewProps {
   templateId: string;
   profile: {
@@ -26,9 +49,11 @@ export default function SignaturePreview({
   const title = profile.job_title ?? "Votre Titre";
   const company = profile.company ?? "";
   const phone = profile.phone ?? "";
-  const logo = profile.logo_base64 ?? profile.logo_url ?? null;
-  const handwritten = handwrittenSignature ?? socials.handwritten_signature ?? null;
-  const socialLinks = Object.entries(socials).filter(([key, value]) => key !== "handwritten_signature" && value.trim() !== "");
+  const logo = sanitizeImageSrc(profile.logo_base64 ?? profile.logo_url);
+  const handwritten = sanitizeImageSrc(handwrittenSignature ?? socials.handwritten_signature);
+  const socialLinks = Object.entries(socials).filter(
+    ([key, value]) => key !== "handwritten_signature" && value && value.trim() !== ""
+  );
 
   const goldColor = "#C9A227";
 
@@ -56,7 +81,13 @@ export default function SignaturePreview({
             ))}
           </div>
         )}
-        {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
+        {handwritten && (
+          <img
+            src={handwritten}
+            alt="Signature manuscrite"
+            style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }}
+          />
+        )}
       </div>
     );
   }
@@ -102,7 +133,13 @@ export default function SignaturePreview({
             </div>
           )}
         </div>
-        {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
+        {handwritten && (
+          <img
+            src={handwritten}
+            alt="Signature manuscrite"
+            style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }}
+          />
+        )}
       </div>
     );
   }
@@ -166,45 +203,90 @@ export default function SignaturePreview({
           )}
         </div>
       </div>
-      {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
+      {handwritten && (
+        <img
+          src={handwritten}
+          alt="Signature manuscrite"
+          style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }}
+        />
+      )}
     </div>
   );
 }
 
 /**
  * Génère le HTML de signature à insérer dans l'email exporté.
- * Utilisé par ExportPanel.
+ * Utilisé par ExportPanel et Step5Preview.
  */
 export function generateSignatureHtml(
   templateId: string,
   profile: SignaturePreviewProps["profile"],
-  socials: Record<string, string> = {}
+  socials: Record<string, string> = {},
+  handwrittenSignature?: string | null
 ): string {
-  const name = profile.full_name ?? "";
-  const title = profile.job_title ?? "";
-  const company = profile.company ?? "";
-  const phone = profile.phone ?? "";
-  const logo = profile.logo_base64 ?? profile.logo_url ?? "";
+  const name = escapeHtml(profile.full_name ?? "");
+  const title = escapeHtml(profile.job_title ?? "");
+  const company = escapeHtml(profile.company ?? "");
+  const phone = escapeHtml(profile.phone ?? "");
+  const logo = sanitizeImageSrc(profile.logo_base64 ?? profile.logo_url);
+  const handwritten = sanitizeImageSrc(handwrittenSignature ?? socials.handwritten_signature);
   const goldColor = "#C9A227";
-  const handwritten = handwrittenSignature ?? socials.handwritten_signature ?? null;
-  const socialLinks = Object.entries(socials).filter(([key, value]) => key !== "handwritten_signature" && value.trim() !== "");
+
+  const socialLinks = Object.entries(socials).filter(
+    ([key, value]) => key !== "handwritten_signature" && value && value.trim() !== ""
+  );
 
   const socialsHtml = socialLinks.length
-    ? `<div style="margin-top:8px;">${socialLinks.map(([key, url]) => `<a href="${url}" style="color:${goldColor};font-size:11px;margin-right:8px;">${key}</a>`).join("")}</div>`
+    ? `<div style="margin-top:8px;">${socialLinks
+        .map(
+          ([key, url]) =>
+            `<a href="${escapeHtml(url)}" style="color:${goldColor};font-size:11px;margin-right:8px;">${escapeHtml(
+              key
+            )}</a>`
+        )
+        .join("")}</div>`
+    : "";
+
+  const handwrittenHtml = handwritten
+    ? `<div style="margin-top:10px;"><img src="${handwritten}" alt="Signature manuscrite" style="height:42px;max-width:160px;object-fit:contain;"/></div>`
     : "";
 
   if (templateId === "minimal") {
-    return `<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;"><strong>${name}</strong><br/><span style="color:#666;font-size:12px;">${[title, company].filter(Boolean).join(" · ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}${handwrittenHtml}</div>`;
+    return `<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;"><strong>${name}</strong><br/><span style="color:#666;font-size:12px;">${[
+      title,
+      company,
+    ]
+      .filter(Boolean)
+      .join(" · ")}</span>${
+      phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""
+    }${socialsHtml}${handwrittenHtml}</div>`;
   }
 
   if (templateId === "bold") {
-    return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="background:#111;padding:10px 14px;border-radius:6px 6px 0 0;">${logo ? `<img src="${logo}" alt="Logo" style="height:28px;"/>` : `<span style="color:${goldColor};font-weight:800;font-size:15px;">${company || name}</span>`}</td></tr><tr><td style="padding:10px 14px;border:1px solid #eee;border-radius:0 0 6px 6px;"><strong style="font-size:13px;">${name}</strong><br/><span style="color:${goldColor};font-size:12px;font-weight:600;">${title}</span>${phone ? `<br/><span style="color:#666;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>${handwrittenHtml}`;
+    return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="background:#111;padding:10px 14px;border-radius:6px 6px 0 0;">${
+      logo
+        ? `<img src="${logo}" alt="Logo" style="height:28px;"/>`
+        : `<span style="color:${goldColor};font-weight:800;font-size:15px;">${
+            company || name
+          }</span>`
+    }</td></tr><tr><td style="padding:10px 14px;border:1px solid #eee;border-radius:0 0 6px 6px;"><strong style="font-size:13px;">${name}</strong><br/><span style="color:${goldColor};font-size:12px;font-weight:600;">${title}</span>${
+      phone ? `<br/><span style="color:#666;font-size:11px;">${phone}</span>` : ""
+    }${socialsHtml}</td></tr></table>${handwrittenHtml}`;
   }
 
   // Classic
   const logoHtml = logo
     ? `<img src="${logo}" alt="Logo" style="width:44px;height:44px;object-fit:contain;border-radius:4px;"/>`
-    : `<div style="width:44px;height:44px;border-radius:6px;background:#111;display:flex;align-items:center;justify-content:center;color:${goldColor};font-weight:800;font-size:16px;">${(name[0] ?? "G").toUpperCase()}</div>`;
+    : `<div style="width:44px;height:44px;border-radius:6px;background:#111;display:flex;align-items:center;justify-content:center;color:${goldColor};font-weight:800;font-size:16px;">${(
+        name[0] ?? "G"
+      ).toUpperCase()}</div>`;
 
-  return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="padding-right:14px;vertical-align:top;">${logoHtml}</td><td style="border-left:3px solid ${goldColor};padding-left:12px;vertical-align:top;"><strong style="color:#111;font-size:14px;">${name}</strong><br/><span style="color:#555;font-size:12px;">${[title, company].filter(Boolean).join(" — ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>${handwrittenHtml}`;
+  return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="padding-right:14px;vertical-align:top;">${logoHtml}</td><td style="border-left:3px solid ${goldColor};padding-left:12px;vertical-align:top;"><strong style="color:#111;font-size:14px;">${name}</strong><br/><span style="color:#555;font-size:12px;">${[
+    title,
+    company,
+  ]
+    .filter(Boolean)
+    .join(" — ")}</span>${
+    phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""
+  }${socialsHtml}</td></tr></table>${handwrittenHtml}`;
 }

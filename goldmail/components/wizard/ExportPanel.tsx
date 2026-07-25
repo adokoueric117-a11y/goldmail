@@ -15,6 +15,15 @@ interface ExportPanelProps {
 
 type CopyState = Record<string, boolean>;
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export default function ExportPanel({
   subject,
   message,
@@ -38,12 +47,15 @@ export default function ExportPanel({
     : "";
 
   // ─── Exports ─────────────────────────────────────────────────────────────
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br/>");
+
   const fullHtml = `<!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="utf-8"><title>${subject}</title></head>
+<head><meta charset="utf-8"><title>${safeSubject}</title></head>
 <body style="font-family:Arial,sans-serif;font-size:14px;color:#333;max-width:640px;margin:0 auto;">
-<h2 style="font-size:16px;color:#111;">${subject}</h2>
-<div style="white-space:pre-line;line-height:1.7;">${message}</div>
+<h2 style="font-size:16px;color:#111;">${safeSubject}</h2>
+<div style="line-height:1.7;">${safeMessage}</div>
 ${sigHtml ? `<br/><hr style="border:none;border-top:1px solid #eee;margin:16px 0;"/>${sigHtml}` : ""}
 </body>
 </html>`;

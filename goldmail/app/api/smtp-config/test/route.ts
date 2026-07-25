@@ -6,7 +6,7 @@ export async function POST() {
     const config = getSmtpConfig();
     if (!config.host) {
       return NextResponse.json(
-        { error: "Veuillez saisir un hôte SMTP avant de tester." },
+        { error: "Veuillez d'abord configurer et enregistrer l'hôte SMTP." },
         { status: 400 }
       );
     }
@@ -15,27 +15,27 @@ export async function POST() {
     await transporter.verify();
 
     return NextResponse.json({
-      ok: true,
-      message: "✓ Connexion SMTP réussie ! Le serveur et les identifiants sont valides.",
+      success: true,
+      message: "Connexion au serveur SMTP réussie !",
     });
   } catch (err: unknown) {
     const error = err as NodeJS.ErrnoException & { responseCode?: number; code?: string; hostname?: string };
     console.error("[smtp-test] Error:", error);
 
-    let msg = "Échec du test SMTP.";
+    let userMessage = "Échec du test de connexion SMTP.";
 
     if (error.code === "EAUTH" || error.responseCode === 535) {
-      msg = "Identifiants SMTP incorrects (nom d'utilisateur ou mot de passe d'application).";
+      userMessage = "Identifiants SMTP invalides (nom d'utilisateur ou mot de passe incorrect).";
     } else if (error.code === "ENOTFOUND") {
-      msg = `Serveur introuvable (${error.hostname || "hôte"}). Vérifiez l'adresse Hôte.`;
+      userMessage = `Serveur SMTP introuvable (${error.hostname || "hôte"}). Vérifiez l'hôte.`;
     } else if (error.code === "ECONNREFUSED") {
-      msg = "Connexion refusée. Vérifiez le port (587 avec TLS ou 465 avec SSL).";
-    } else if (error.code === "ETIMEDOUT") {
-      msg = "Délai d'attente dépassé (timeout) lors de la tentative de connexion au serveur SMTP.";
+      userMessage = "Connexion refusée par le serveur SMTP. Vérifiez le port (587 ou 465).";
+    } else if (error.code === "ETIMEDOUT" || error.message?.includes("timeout")) {
+      userMessage = "Délai d'attente dépassé. Le serveur SMTP ne répond pas.";
     } else if (error.message) {
-      msg = `Erreur : ${error.message}`;
+      userMessage = `Erreur SMTP : ${error.message}`;
     }
 
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ error: userMessage }, { status: 500 });
   }
 }
