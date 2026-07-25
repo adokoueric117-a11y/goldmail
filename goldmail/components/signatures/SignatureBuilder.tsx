@@ -198,7 +198,6 @@ export default function SignatureBuilder({
             profile={profileData}
             socials={socials}
             handwrittenSignature={handwrittenSignature}
-            handwrittenSignature={handwrittenSignature}
           />
         </div>
       )}
