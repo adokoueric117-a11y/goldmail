@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Plus,
   PenLine,
+  FileText,
   Settings,
 } from "lucide-react";
 import GoldLogo from "@/components/ui/GoldLogo";
@@ -19,6 +20,7 @@ import OnlineBadge from "@/components/ui/OnlineBadge";
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
   { href: "/dashboard/new", icon: Plus, label: "Nouvel email", exact: false },
+  { href: "/dashboard/documents", icon: FileText, label: "Documents", exact: false },
   { href: "/dashboard/signatures", icon: PenLine, label: "Signatures", exact: false },
   { href: "/dashboard/settings", icon: Settings, label: "Paramètres", exact: false },
 ];

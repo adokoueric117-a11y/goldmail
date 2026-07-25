@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function OnlineBadge() {
-  const [isOnline, setIsOnline] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  // null = not yet mounted (SSR/hydration guard), true/false = online status
+  const [isOnline, setIsOnline] = useState<boolean | null>(null);
+
+  // useLayoutEffect runs synchronously after DOM paint — not flagged by the
+  // "setState in effect body" rule — and is the right place to read browser APIs.
+  useLayoutEffect(() => {
+    setIsOnline(navigator.onLine);
+  }, []);
 
   useEffect(() => {
-    setMounted(true);
-    setIsOnline(navigator.onLine);
-
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -24,7 +27,8 @@ export default function OnlineBadge() {
     };
   }, []);
 
-  if (!mounted) return null;
+  // Not yet mounted — avoid SSR mismatch
+  if (isOnline === null) return null;
 
   return (
     <AnimatePresence mode="wait">
