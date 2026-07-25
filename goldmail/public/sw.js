@@ -1,64 +1,31 @@
-const CACHE_NAME = "goldmail-v2";
-const ASSETS_TO_CACHE = [
-  "/",
-  "/dashboard",
-  "/dashboard/new",
-  "/dashboard/signatures",
-  "/dashboard/settings",
-  "/manifest.json",
-  "/sql-wasm.wasm",
-  "/sql-wasm-browser.wasm",
-  "/favicon.ico",
-  "/icons/icon-192.svg",
-  "/icons/icon-512.svg"
+const CACHE_NAME = "goldmail-v3";
+const APP_SHELL = [
+  "/", "/dashboard", "/dashboard/new", "/dashboard/documents",
+  "/dashboard/signatures", "/dashboard/settings", "/manifest.json",
+  "/sql-wasm.wasm", "/sql-wasm-browser.wasm", "/favicon.ico",
+  "/icons/icon-192.png", "/icons/icon-512.png"
 ];
 
-// Install: pre-cache core App Shell assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn("[SW] Cache addAll warning:", err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Une ressource indisponible ne doit pas empêcher l'installation entière du PWA.
+      await Promise.allSettled(APP_SHELL.map((asset) => cache.add(asset)));
     }).then(() => self.skipWaiting())
   );
 });
 
-// Activate: clear old caches
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
-// Fetch: Stale-While-Revalidate for app assets, Network-only for /api/send-email
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-
-  // Skip non-GET requests or API send-email (network only)
-  if (event.request.method !== "GET" || url.pathname.startsWith("/api/send-email")) {
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
-  );
+  if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin || new URL(event.request.url).pathname.startsWith("/api/")) return;
+  event.respondWith(caches.match(event.request).then((cached) => {
+    const network = fetch(event.request).then((response) => {
+      if (response.ok && response.type === "basic") caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+      return response;
+    }).catch(() => cached);
+    return cached || network;
+  }));
 });

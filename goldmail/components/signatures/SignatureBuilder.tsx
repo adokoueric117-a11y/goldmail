@@ -48,6 +48,7 @@ export default function SignatureBuilder({
   const [socials, setSocials] = useState<Record<string, string>>(
     (existing?.socials as Record<string, string>) ?? {}
   );
+  const [handwrittenSignature, setHandwrittenSignature] = useState<string | null>((existing?.socials as Record<string, string>)?.handwritten_signature ?? null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -56,15 +57,25 @@ export default function SignatureBuilder({
     setSocials((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleSignatureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      setError("Choisissez une image PNG, JPEG ou WebP de moins de 2 Mo.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => { setHandwrittenSignature(reader.result as string); setError(null); };
+    reader.readAsDataURL(file);
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSaved(false);
 
     startTransition(async () => {
-      const filteredSocials = Object.fromEntries(
-        Object.entries(socials).filter(([, v]) => v.trim() !== "")
-      );
+      const filteredSocials = Object.fromEntries(Object.entries(socials).filter(([key, value]) => key !== "handwritten_signature" && value.trim() !== ""));
+      if (handwrittenSignature) filteredSocials.handwritten_signature = handwrittenSignature;
 
       if (existing) {
         const { error: updateError } = await updateSignature(existing.id, {
@@ -171,7 +182,13 @@ export default function SignatureBuilder({
           ))}
         </div>
       </div>
-
+      {/* Signature manuscrite */}
+      <div className="form-control">
+        <label className="label pb-1"><span className="label-text text-xs font-medium text-base-content/70">Signature manuscrite (optionnel)</span></label>
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleSignatureUpload} className="file-input file-input-bordered file-input-sm bg-base-200 border-base-300 w-full" />
+        <p className="text-xs text-base-content/45 mt-1">Photo ou scan de votre signature — PNG, JPEG ou WebP, 2 Mo maximum.</p>
+        {handwrittenSignature && <div className="mt-3 flex items-center gap-3"><img src={handwrittenSignature} alt="Aperçu de la signature manuscrite" className="h-14 max-w-48 object-contain rounded bg-white px-2" /><button type="button" onClick={() => setHandwrittenSignature(null)} className="btn btn-ghost btn-xs text-error"><X size={13} /> Supprimer</button></div>}
+      </div>
       {/* Aperçu */}
       {profileData && (
         <div className="space-y-2">
@@ -180,6 +197,8 @@ export default function SignatureBuilder({
             templateId={templateId}
             profile={profileData}
             socials={socials}
+            handwrittenSignature={handwrittenSignature}
+            handwrittenSignature={handwrittenSignature}
           />
         </div>
       )}

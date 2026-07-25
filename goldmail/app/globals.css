@@ -196,3 +196,11 @@
   background: oklch(72% 0.15 85 / 0.25);
   color: var(--color-base-content);
 }
+
+@media print {
+  body { background: #fff !important; }
+  body * { visibility: hidden; }
+  .document-paper, .document-paper * { visibility: visible; }
+  .document-paper { position: absolute; inset: 0; width: 100%; }
+  @page { size: A4; margin: 14mm; }
+}

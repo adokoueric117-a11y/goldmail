@@ -13,19 +13,22 @@ interface SignaturePreviewProps {
     logo_url?: string | null;
   };
   socials?: Record<string, string>;
+  handwrittenSignature?: string | null;
 }
 
 export default function SignaturePreview({
   templateId,
   profile,
   socials = {},
+  handwrittenSignature,
 }: SignaturePreviewProps) {
   const name = profile.full_name ?? "Votre Nom";
   const title = profile.job_title ?? "Votre Titre";
   const company = profile.company ?? "";
   const phone = profile.phone ?? "";
   const logo = profile.logo_base64 ?? profile.logo_url ?? null;
-  const socialLinks = Object.entries(socials).filter(([, v]) => v.trim() !== "");
+  const handwritten = handwrittenSignature ?? socials.handwritten_signature ?? null;
+  const socialLinks = Object.entries(socials).filter(([key, value]) => key !== "handwritten_signature" && value.trim() !== "");
 
   const goldColor = "#C9A227";
 
@@ -53,6 +56,7 @@ export default function SignaturePreview({
             ))}
           </div>
         )}
+        {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
       </div>
     );
   }
@@ -98,6 +102,7 @@ export default function SignaturePreview({
             </div>
           )}
         </div>
+        {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
       </div>
     );
   }
@@ -161,6 +166,7 @@ export default function SignaturePreview({
           )}
         </div>
       </div>
+      {handwritten && <img src={handwritten} alt="Signature manuscrite" style={{ height: "42px", maxWidth: "160px", objectFit: "contain", marginTop: "10px" }} />}
     </div>
   );
 }
@@ -180,18 +186,19 @@ export function generateSignatureHtml(
   const phone = profile.phone ?? "";
   const logo = profile.logo_base64 ?? profile.logo_url ?? "";
   const goldColor = "#C9A227";
-  const socialLinks = Object.entries(socials).filter(([, v]) => v.trim() !== "");
+  const handwritten = handwrittenSignature ?? socials.handwritten_signature ?? null;
+  const socialLinks = Object.entries(socials).filter(([key, value]) => key !== "handwritten_signature" && value.trim() !== "");
 
   const socialsHtml = socialLinks.length
     ? `<div style="margin-top:8px;">${socialLinks.map(([key, url]) => `<a href="${url}" style="color:${goldColor};font-size:11px;margin-right:8px;">${key}</a>`).join("")}</div>`
     : "";
 
   if (templateId === "minimal") {
-    return `<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;"><strong>${name}</strong><br/><span style="color:#666;font-size:12px;">${[title, company].filter(Boolean).join(" · ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</div>`;
+    return `<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;"><strong>${name}</strong><br/><span style="color:#666;font-size:12px;">${[title, company].filter(Boolean).join(" · ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}${handwrittenHtml}</div>`;
   }
 
   if (templateId === "bold") {
-    return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="background:#111;padding:10px 14px;border-radius:6px 6px 0 0;">${logo ? `<img src="${logo}" alt="Logo" style="height:28px;"/>` : `<span style="color:${goldColor};font-weight:800;font-size:15px;">${company || name}</span>`}</td></tr><tr><td style="padding:10px 14px;border:1px solid #eee;border-radius:0 0 6px 6px;"><strong style="font-size:13px;">${name}</strong><br/><span style="color:${goldColor};font-size:12px;font-weight:600;">${title}</span>${phone ? `<br/><span style="color:#666;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>`;
+    return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="background:#111;padding:10px 14px;border-radius:6px 6px 0 0;">${logo ? `<img src="${logo}" alt="Logo" style="height:28px;"/>` : `<span style="color:${goldColor};font-weight:800;font-size:15px;">${company || name}</span>`}</td></tr><tr><td style="padding:10px 14px;border:1px solid #eee;border-radius:0 0 6px 6px;"><strong style="font-size:13px;">${name}</strong><br/><span style="color:${goldColor};font-size:12px;font-weight:600;">${title}</span>${phone ? `<br/><span style="color:#666;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>${handwrittenHtml}`;
   }
 
   // Classic
@@ -199,5 +206,5 @@ export function generateSignatureHtml(
     ? `<img src="${logo}" alt="Logo" style="width:44px;height:44px;object-fit:contain;border-radius:4px;"/>`
     : `<div style="width:44px;height:44px;border-radius:6px;background:#111;display:flex;align-items:center;justify-content:center;color:${goldColor};font-weight:800;font-size:16px;">${(name[0] ?? "G").toUpperCase()}</div>`;
 
-  return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="padding-right:14px;vertical-align:top;">${logoHtml}</td><td style="border-left:3px solid ${goldColor};padding-left:12px;vertical-align:top;"><strong style="color:#111;font-size:14px;">${name}</strong><br/><span style="color:#555;font-size:12px;">${[title, company].filter(Boolean).join(" — ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>`;
+  return `<table style="font-family:Arial,sans-serif;border-collapse:collapse;"><tr><td style="padding-right:14px;vertical-align:top;">${logoHtml}</td><td style="border-left:3px solid ${goldColor};padding-left:12px;vertical-align:top;"><strong style="color:#111;font-size:14px;">${name}</strong><br/><span style="color:#555;font-size:12px;">${[title, company].filter(Boolean).join(" — ")}</span>${phone ? `<br/><span style="color:#888;font-size:11px;">${phone}</span>` : ""}${socialsHtml}</td></tr></table>${handwrittenHtml}`;
 }

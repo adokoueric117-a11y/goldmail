@@ -39,6 +39,7 @@ export default function SignaturesPage() {
         </div>
       ) : (
         <SignaturesClient
+          key={signatures.map((signature) => signature.id).join(",")}
           signatures={signatures}
           profile={profile}
           onRefresh={loadData}
