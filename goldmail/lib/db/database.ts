@@ -17,20 +17,17 @@ async function loadSQL(): Promise<SqlJsStatic> {
   if (_SQL) return _SQL;
   const initSqlJs = (await import("sql.js")).default;
   _SQL = await initSqlJs({
-    // Le fichier WASM est servi depuis /sql-wasm.wasm (copié dans public/)
-    locateFile: (file: string) => file.endsWith(".wasm") ? "/sql-wasm.wasm" : `/${file}`,
+    locateFile: (file: string) => (file.endsWith(".wasm") ? "/sql-wasm.wasm" : `/${file}`),
   });
   return _SQL;
 }
 
 async function loadOrCreateDB(SQL: SqlJsStatic): Promise<Database> {
-  // Essayer de charger la DB existante depuis IndexedDB
   const stored = await localforage.getItem<ArrayBuffer>(DB_KEY);
   if (stored) {
     const uint8 = new Uint8Array(stored);
     return new SQL.Database(uint8);
   }
-  // Sinon créer une nouvelle base
   return new SQL.Database();
 }
 
@@ -74,6 +71,18 @@ function applyMigrations(db: Database) {
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS custom_templates (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      badge TEXT NOT NULL,
+      description TEXT,
+      default_subject TEXT NOT NULL,
+      default_recipient TEXT,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL
     );
   `);
 }
